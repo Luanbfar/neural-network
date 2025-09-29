@@ -323,11 +323,6 @@ int main()
 
     printf("\n=== Execução Finalizada com Sucesso ===\n");
     printf("A rede neural foi treinada e avaliada.\n");
-    printf("Para melhorar a performance, considere:\n");
-    printf("  - Aumentar o número de épocas de treinamento\n");
-    printf("  - Ajustar a taxa de aprendizado\n");
-    printf("  - Modificar a arquitetura da rede\n");
-    printf("  - Usar técnicas de regularização\n");
 
     return 0;
 }
