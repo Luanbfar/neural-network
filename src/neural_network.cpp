@@ -165,12 +165,12 @@ namespace neural_network
         }
 
         float totalLoss = 0.0f;
-        const float epsilon = 1e-15f;
+        // const float epsilon = 1e-7f;
 
         for (size_t i = 0; i < expected.size(); ++i)
         {
             float actual = this->outputLayer->nodes[i]->value;
-            actual = max(epsilon, min(1.0f - epsilon, actual));
+            // actual = max(epsilon, min(1.0f - epsilon, actual));
 
             totalLoss -= expected[i] * log(actual) + (1.0f - expected[i]) * log(1.0f - actual);
         }
@@ -230,7 +230,7 @@ namespace neural_network
                 vector<float> targets(row.begin() + this->getInputSize(), row.end());
 
                 this->forward(inputs);
-                this->backpropagate(targets, 0.01f);
+                this->backpropagate(targets, 0.001f);
             }
         }
     }
