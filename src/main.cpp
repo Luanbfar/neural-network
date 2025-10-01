@@ -212,12 +212,12 @@ int main()
     // =====================================
     printf("\nCriando rede neural...\n");
 
-    Normalizer *normalizer = new Normalizer("process_data.py");
+    Normalizer *normalizer = new Normalizer({100.0f, 250.0f, 200.0f}); // Valores máximos para normalização
 
     // Arquitetura: 3 entradas -> 2 camadas ocultas de 8 neurônios -> 1 saída
     const int entradas = 3; // idade, peso, altura (normalizados)
     const int saidas = 1;   // probabilidade CVD
-    const int camadas_ocultas = 4;
+    const int camadas_ocultas = 2;
     const int neuronios_por_camada = 4;
 
     NeuralNetwork *rede = new NeuralNetwork(entradas, saidas, camadas_ocultas, neuronios_por_camada);
@@ -232,21 +232,33 @@ int main()
     // =====================================
     printf("\nIniciando treinamento...\n");
 
-    const int epocas = 1000;
+    const int epocas = 100;
     const int tamanho_lote = 32;
-    const int intervalo_relatorio = 100;
+
+    const int epocas_rastreadas = 100;
 
     auto inicio_treinamento = chrono::high_resolution_clock::now();
 
     for (int epoca = 0; epoca < epocas; ++epoca)
     {
-        // Treina uma época
+        // Enable delta tracking for first few epochs
+        if (epoca < epocas_rastreadas)
+        {
+            rede->enableDeltaTracking();
+            printf("Época %d: Rastreando deltas...\n", epoca);
+        }
+        else if (epoca == epocas_rastreadas)
+        {
+            rede->disableDeltaTracking();
+            printf("Rastreamento de deltas desativado. Continuando treinamento normal...\n");
+        }
+
+        rede->setEpoch(epoca);
         rede->train(dados_treinamento, tamanho_lote);
 
-        // Relatório de progresso
-        if (epoca % intervalo_relatorio == 0)
+        // Progress report
+        if (epoca % 100 == 0 || epoca < epocas_rastreadas)
         {
-            // Calcula perda média em uma amostra do conjunto de treinamento
             float perda_media = 0.0f;
             int amostras_teste = min(100, (int)dados_treinamento.size());
 
@@ -294,31 +306,33 @@ int main()
 
     // Exemplo: pessoa jovem, peso normal, altura média
     vector<float> exemplo1 = {25.0f, 70.0f, 175.0f}; // 25 anos, 70kg, 175cm
-    vector<float> exemplo1Normalizado = normalizer->normalize(exemplo1[0], exemplo1[1], exemplo1[2]);
+    vector<float> exemplo1Normalizado = normalizer->normalize(exemplo1);
     vector<float> resultado1 = rede->forward(exemplo1Normalizado);
     printf("Pessoa jovem (25a, 70kg, 175cm): Risco CVD = %.2f%%\n", resultado1[0] * 100);
 
     // Exemplo: pessoa mais velha, sobrepeso, altura média
     vector<float> exemplo2 = {60.0f, 90.0f, 170.0f}; // 60 anos, 90kg, 170cm
-    vector<float> exemplo2Normalizado = normalizer->normalize(exemplo2[0], exemplo2[1], exemplo2[2]);
+    vector<float> exemplo2Normalizado = normalizer->normalize(exemplo2);
     vector<float> resultado2 = rede->forward(exemplo2Normalizado);
     printf("Pessoa mais velha (60a, 90kg, 170cm): Risco CVD = %.2f%%\n", resultado2[0] * 100);
 
     // Exemplo: pai
     vector<float> exemplo3 = {57.0f, 79.0f, 170.0f}; // 57 anos, 79kg, 170cm
-    vector<float> exemplo3Normalizado = normalizer->normalize(exemplo3[0], exemplo3[1], exemplo3[2]);
+    vector<float> exemplo3Normalizado = normalizer->normalize(exemplo3);
     vector<float> resultado3 = rede->forward(exemplo3Normalizado);
     printf("Pessoa (57a, 79kg, 170cm): Risco CVD = %.2f%%\n", resultado3[0] * 100);
 
     // Exemplo: mãe
     vector<float> exemplo4 = {50.0f, 58.0f, 159.0f}; // 50 anos, 58kg, 159cm
-    vector<float> exemplo4Normalizado = normalizer->normalize(exemplo4[0], exemplo4[1], exemplo4[2]);
+    vector<float> exemplo4Normalizado = normalizer->normalize(exemplo4);
     vector<float> resultado4 = rede->forward(exemplo4Normalizado);
     printf("Pessoa (50a, 58kg, 159cm): Risco CVD = %.2f%%\n", resultado4[0] * 100);
 
     // =====================================
     // 7. LIMPEZA E FINALIZAÇÃO
     // =====================================
+    printf("\nExportando deltas para análise...\n");
+    rede->exportDeltasToCSV("deltas.csv");
     delete rede;
 
     printf("\n=== Execução Finalizada com Sucesso ===\n");

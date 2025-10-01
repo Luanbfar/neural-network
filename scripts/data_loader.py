@@ -46,9 +46,13 @@ class DataLoader:
         """
         # These ranges are based on typical human values
         normalized_age = min(max(age / 100.0, 0), 1)  # 0-100 years
-        normalized_weight = min(max(weight / 200.0, 0), 1)  # 0-200 kg
-        normalized_height = min(max(height / 250.0, 0), 1)  # 0-250 cm
-        return [normalized_age, normalized_weight, normalized_height]
+        normalized_weight = min(max(weight / 250.0, 0), 1)  # 0-250 kg
+        normalized_height = min(max(height / 200.0, 0), 1)  # 0-200 cm
+        return [
+            round(normalized_age, 4),
+            round(normalized_weight, 4),
+            round(normalized_height, 4),
+        ]
 
     def load_data(self, filename="data/labeled_data.json"):
         """
@@ -82,6 +86,7 @@ class DataLoader:
                 inputs = self.normalize(
                     subject["age"], subject["weight"], subject["height"]
                 )
+
                 all_samples.append((inputs, subject["cvd_prob"]))
 
         random.shuffle(all_samples)

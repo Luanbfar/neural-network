@@ -6,54 +6,23 @@
 
 using namespace std;
 
-Normalizer::Normalizer(const string &scriptPath)
+Normalizer::Normalizer(const vector<float> maxValues)
 {
-    this->scriptPath = scriptPath;
+    this->maxValues = maxValues;
 }
 
-vector<float> Normalizer::normalize(float age, float weight, float height) const
+vector<float> Normalizer::normalize(vector<float> &features) const
 {
-    string command = "python3 " + this->scriptPath + " --normalize " +
-                     to_string(age) + " " +
-                     to_string(weight) + " " +
-                     to_string(height);
+    vector<float> normalized(features.size());
 
-    FILE *pipe = popen(command.c_str(), "r");
-    if (!pipe)
+    for (size_t i = 0; i < features.size(); ++i)
     {
-        throw runtime_error("popen() falhou ao tentar executar o script: " + this->scriptPath);
-    }
+        float actual = features[i];
+        float maxVal = maxValues[i];
 
-    array<char, 128> buffer;
-    string result_str = "";
-    while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
-    {
-        result_str += buffer.data();
-    }
+        float normalizedValue = min(max(actual / maxVal, 0.0f), 1.0f);
 
-    int exit_code = pclose(pipe);
-    if (exit_code != 0)
-    {
-        throw runtime_error("O script Python terminou com um código de erro.");
+        normalized[i] = normalizedValue;
     }
-
-    if (result_str.empty())
-    {
-        throw runtime_error("O script Python não retornou nenhuma saída.");
-    }
-
-    vector<float> values;
-    stringstream ss(result_str);
-    string item;
-    while (getline(ss, item, ','))
-    {
-        values.push_back(stof(item));
-    }
-
-    if (values.size() != 3)
-    {
-        throw runtime_error("A saída do script de normalização está em um formato inesperado.");
-    }
-
-    return values;
+    return normalized;
 }

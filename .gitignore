@@ -68,3 +68,6 @@ data/test_data.csv
 data/training_data.csv
 data/validation_data.csv
 data/labeled_data.json
+
+*.png
+deltas.csv
